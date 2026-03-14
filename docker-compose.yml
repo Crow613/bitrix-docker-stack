@@ -1,0 +1,53 @@
+services:
+  bitrix:
+    image: crow613/bitrix-web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./www:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      - ./bitrix-web/apache2/custom-ports.conf:/etc/apache2/ports.conf
+      - ./bitrix-web/apache2/custom-default.conf:/etc/apache2/sites-available/000-default.conf
+    depends_on:
+      - mysql
+      - rabbit
+    command: sh -c "
+      mkdir -p /var/lib/php/sessions && \
+      chown -R 1000:www-data /var/lib/php && \
+      chmod -R 777 /var/lib/php && \
+      apache2-foreground
+      "
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - bitrix
+  mysql:
+    image: mariadb:10.6
+    container_name: bx24_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sitemanager
+      MYSQL_USER: bitrix
+      MYSQL_PASSWORD: bitrix
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  rabbit:
+    image: rabbitmq:3.12-management
+    container_name: bx24_rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: bitrix
+      RABBITMQ_DEFAULT_PASS: bitrix
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+volumes:
+  db_data:
