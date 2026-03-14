@@ -15,6 +15,7 @@ services:
       mkdir -p /var/lib/php/sessions && \
       chown -R 1000:www-data /var/lib/php && \
       chmod -R 777 /var/lib/php && \
+      chmod -R 777 /var/www/html && \
       apache2-foreground
       "
   nginx:
